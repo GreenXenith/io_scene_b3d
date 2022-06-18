@@ -49,21 +49,29 @@ bl_info = {
 
 
 import bpy
-import sys,os,os.path,struct,math,string
+import sys,os,os.path,math,string
 import mathutils
 import math
 
-if not hasattr(sys,"argv"): sys.argv = ["???"]
+from util import *
 
 
 #Global Stacks
 b3d_parameters = {}
-texture_flags  = []
-texs_stack     = {}
-brus_stack     = []
-vertex_groups  = []
-bone_stack     = {}
-keys_stack     = []
+
+def reset_global_stacks():
+    """Resets (or initializes) all global stacks except b3d_parameters."""
+
+    globals().update({
+        "texture_flags"      : [],
+        "texs_stack"         : {},
+        "brus_stack"         : [],
+        "vertex_groups"      : [],
+        "bone_stack"         : [],
+        "keys_stack"         : {},
+        "trimmed_paths"      : {},
+        "tesselated_objects" : {}
+    })
 
 texture_count = 0
 
@@ -71,6 +79,9 @@ texture_count = 0
 BONE_PARENT_MATRIX = 0
 BONE_PARENT = 1
 BONE_ITSELF = 2
+
+# export format information
+_B3D_EXPORT_VERSION = 1
 
 # texture stack indices constants
 TEXTURE_ID = 0
@@ -81,40 +92,23 @@ per_face_vertices = {}
 the_scene = None
 
 #Transformation Matrix
-TRANS_MATRIX = mathutils.Matrix([[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]])
-BONE_TRANS_MATRIX = mathutils.Matrix([[-1,0,0,0],[0,0,-1,0],[0,-1,0,0],[0,0,0,1]])
+TRANS_MATRIX = mathutils.Matrix(
+    [[1, 0, 0, 0],
+     [0, 0, 1, 0],
+     [0, 1, 0, 0],
+     [0, 0, 0, 1]]
+)
+
+BONE_TRANS_MATRIX = mathutils.Matrix(
+    [[-1,  0,  0, 0],
+     [ 0,  0, -1, 0],
+     [ 0, -1,  0, 0],
+     [ 0,  0,  0, 1]]
+)
 
 DEBUG = False
 PROGRESS = True
 PROGRESS_VERBOSE = False
-
-tesselated_objects = {}
-
-#Support Functions
-def write_int(value):
-    return struct.pack("<i",value)
-
-def write_float(value):
-    return struct.pack("<f",value)
-
-def write_float_couple(value1, value2):
-    return struct.pack("<ff", value1, value2)
-
-def write_float_triplet(value1, value2, value3):
-    return struct.pack("<fff", value1, value2, value3)
-
-def write_float_quad(value1, value2, value3, value4):
-    return struct.pack("<ffff", value1, value2, value3, value4)
-    
-def write_string(value):
-    binary_format = "<%ds"%(len(value)+1)
-    return struct.pack(binary_format, str.encode(value))
-
-def write_chunk(name,value):
-    dummy = bytearray()
-    return dummy + name + write_int(len(value)) + value
-
-trimmed_paths = {}
 
 def getArmatureAnimationEnd(armature):
     end_frame = 1
@@ -132,44 +126,32 @@ def getArmatureAnimationEnd(armature):
 
 # ==== Write B3D File ====
 # (main exporter function)
-def write_b3d_file(filename, objects=[]):
-    global texture_flags, texs_stack, trimmed_paths, tesselated_objects
-    global brus_stack, vertex_groups, bone_stack, keys_stack
+def write_b3d_file(filename, objects=None):
+    if not objects:
+        objects = []
 
-    #Global Stacks
-    texture_flags = []
-    texs_stack = {}
-    brus_stack = []
-    vertex_groups = []
-    bone_stack = []
-    keys_stack = []
-    trimmed_paths = {}
-    file_buf = bytearray()
-    temp_buf = bytearray()
-    tesselated_objects = {}
+    reset_global_stacks()
 
-    import time
-    start = time.time()
-
-    temp_buf += write_int(1) #Version
-    temp_buf += write_texs(objects) #TEXS
-    temp_buf += write_brus(objects) #BRUS
-    temp_buf += write_node(objects) #NODE
+    temp_buf += write_int(_B3D_EXPORT_VERSION)
+    temp_buf += write_texs(objects)
+    temp_buf += write_brus(objects)
+    temp_buf += write_node(objects)
 
     if len(temp_buf) > 0:
         file_buf += write_chunk(b"BB3D",temp_buf)
-        temp_buf = ""
 
-    file = open(filename,'wb')
-    file.write(file_buf)
-    file.close()
+    with open(filename, "wb") as f:
+        f.write(file_buf)
+
+
+def timed_write_b3d_file(*args, **kwargs):
+    import time
     
-    # free memory
-    trimmed_paths = {}
-    
-    end = time.time()
-    
-    print("Exported in", (end - start))
+    start = time.perf_time()
+    write_b3d_file(*args, **kwargs)
+    end = time.perf_time()
+
+    print("Exported in {delta}".format(delta=(end-start)))
 
 
 def tesselate_if_needed(objdata):
@@ -1481,7 +1463,7 @@ class B3D_Confirm_Operator(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
     
     def execute(self, context):
-        write_b3d_file(B3D_Confirm_Operator.filepath)
+        timed_write_b3d_file(B3D_Confirm_Operator.filepath)
         return {'FINISHED'}
 
 
@@ -1560,7 +1542,7 @@ class B3D_Export_Operator(bpy.types.Operator):
             #
             #write_b3d_file(self.filepath, obj_list)
             
-            write_b3d_file(self.filepath, obj_list)
+            timed_write_b3d_file(self.filepath, obj_list)
         else:
             if os.path.exists(self.filepath) and not self.overwrite_without_asking:
                 #self.report({'ERROR'}, "File Exists")
@@ -1568,7 +1550,7 @@ class B3D_Export_Operator(bpy.types.Operator):
                 bpy.ops.screen.b3d_confirm('INVOKE_DEFAULT')
                 return {'FINISHED'}
             else:
-                write_b3d_file(self.filepath)
+                timed_write_b3d_file(self.filepath)
         return {'FINISHED'}
 
 
@@ -1611,7 +1593,7 @@ def save(operator,
     print('Exporting', filepath, 'Objects', len(obj_list))
 
     if len(obj_list) > 0:
-        write_b3d_file(filepath, obj_list)
+        timed_write_b3d_file(filepath, obj_list)
 
     return {'FINISHED'}
 
