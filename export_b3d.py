@@ -1130,11 +1130,9 @@ def write_node_mesh_vrts(obj, data, obj_count, arm_action, exp_root):
             if b3d_parameters.get("vertex-normals"):
                 norm_matrix = mathutils.Matrix.Translation(loop.normal)
 
-                if arm_action:
-                    norm_matrix @= mesh_matrix
-
                 norm_matrix @= TRANS_MATRIX
                 normal_vector = norm_matrix.to_translation()
+                normal_vector.normalize()
                 
                 temp_buf.append(write_float_triplet(normal_vector.x,  #NX
                                                     normal_vector.z,  #NY
