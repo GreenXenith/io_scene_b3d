@@ -118,6 +118,7 @@ class ExportB3D(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         from . import export_b3d
 
+        export_b3d.b3d_parameters["vertex-normals"] = True
         export_b3d.b3d_parameters["export-selected"] = self.use_selection
 
         keywords = self.as_keywords(ignore=("filter_glob", "check_existing"))

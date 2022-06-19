@@ -1092,6 +1092,7 @@ def write_node_mesh_vrts(obj, data, obj_count, arm_action, exp_root):
                 my_uvs[f.index].append(uv)
 
     uv_layers_count = len(getUVTextures(data))
+    data.calc_normals_split() # ensure loop normals are valid
     for face in getFaces(data):
         
         if DEBUG: print("        <!-- Face",face.index,"-->")
@@ -1102,8 +1103,10 @@ def write_node_mesh_vrts(obj, data, obj_count, arm_action, exp_root):
         
         per_face_vertices[face.index] = []
         
-        for vertex_id,vert in enumerate(face.vertices):
+        for vertex_id, loop_index in enumerate(face.loop_indices):
             
+            loop = data.loops[loop_index]
+            vert = loop.vertex_index
             ivert += 1
                         
             per_face_vertices[face.index].append(ivert)
@@ -1125,7 +1128,7 @@ def write_node_mesh_vrts(obj, data, obj_count, arm_action, exp_root):
             #time_in_a += b - a
             
             if b3d_parameters.get("vertex-normals"):
-                norm_matrix = mathutils.Matrix.Translation(data.vertices[vert].normal)
+                norm_matrix = mathutils.Matrix.Translation(loop.normal)
 
                 if arm_action:
                     norm_matrix @= mesh_matrix
