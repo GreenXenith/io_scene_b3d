@@ -5,6 +5,7 @@ import os
 import struct
 
 class B3DParser:
+
     def __init__(self):
         self.fp = None
 
@@ -24,10 +25,10 @@ class B3DParser:
 
     def next_chunk(self):
         pos = self.fp.tell()
-        s1,s2,s3,s4, size = struct.unpack('4ci', self.fp.read(8))
-        chunk = ''.join([chr(ord(x)) for x in (s1,s2,s3,s4)])
-        next = pos + size + 8
-        return chunk, pos, size, next
+        s1, s2, s3, s4, size = struct.unpack('4ci', self.fp.read(8))
+        chunk = ''.join([chr(ord(x)) for x in (s1, s2, s3, s4)])
+        next_chunk_pos = pos + size + 8
+        return chunk, pos, size, next_chunk_pos
 
     def cb_result(self):
         return True
@@ -42,7 +43,7 @@ class B3DParser:
                 del stack[-1]
                 self.cb_prev()
 
-            chunk, pos, size, next = self.next_chunk()
+            chunk, pos, size, next_chunk_pos = self.next_chunk()
 
             if chunk=='BB3D':
                 self.cb_data(chunk, {'version': self.i(1)[0]})
@@ -55,7 +56,7 @@ class B3DParser:
 
             elif chunk=='TEXS':
                 data = []
-                while self.fp.tell()<next:
+                while self.fp.tell()<next_chunk_pos:
                     name = self.gets()
                     flags, blend = self.i(2)
                     pos = self.f(2)
@@ -67,7 +68,7 @@ class B3DParser:
             elif chunk=='BRUS':
                 n_texs = self.i(1)[0]
                 data = []
-                while self.fp.tell()<next:
+                while self.fp.tell()<next_chunk_pos:
                     name = self.gets()
                     rgba = self.f(4)
                     shine = self.f(1)[0]
@@ -78,7 +79,7 @@ class B3DParser:
 
             elif chunk=='NODE':
                 self.cb_next()
-                stack.append(next)
+                stack.append(next_chunk_pos)
                 name = self.gets()
                 p = self.f(3)
                 s = self.f(3)
@@ -88,7 +89,7 @@ class B3DParser:
 
             elif chunk=='BONE':
                 bones = []
-                while self.fp.tell()<next:
+                while self.fp.tell()<next_chunk_pos:
                     vertex_id = self.i(1)[0]
                     weight = self.f(1)[0]
                     bones.append((vertex_id, weight))
@@ -96,14 +97,12 @@ class B3DParser:
 
             elif chunk=='MESH':
                 self.cb_data(chunk, {'brush_id': self.i(1)[0]})
-                #self.cb_next()
-                #stack.append(next)
                 continue
 
             elif chunk=='VRTS':
                 flags, tcs, tcss = self.i(3)
                 v,n,c,u = [],[],[],[]
-                while self.fp.tell()<next:
+                while self.fp.tell()<next_chunk_pos:
                     v.append(self.f(3))
                     if flags & 1: n.append(self.f(3))
                     if flags & 2: c.append(self.f(4))
@@ -113,7 +112,7 @@ class B3DParser:
             elif chunk=='TRIS':
                 brush_id = self.i(1)[0]
                 faces = []
-                while self.fp.tell()<next:
+                while self.fp.tell()<next_chunk_pos:
                     vertex_id = self.i(3)
                     faces.append(vertex_id)
                 self.cb_data(chunk, {'brush_id':brush_id, 'indices':faces})
@@ -121,7 +120,7 @@ class B3DParser:
             elif chunk=='KEYS':
                 flags = self.i(1)[0]
                 keys = []
-                while self.fp.tell()<next:
+                while self.fp.tell()<next_chunk_pos:
                     key = dotdict({'frame':self.i(1)[0]})
                     if flags & 1: key['position'] = self.f(3)
                     if flags & 2: key['scale'] = self.f(3)
@@ -129,7 +128,7 @@ class B3DParser:
                     keys.append(key)
                 self.cb_data(chunk, keys)
 
-            self.fp.seek(next)
+            self.fp.seek(next_chunk_pos)
 
         return self.cb_result()
 
@@ -203,7 +202,7 @@ class B3DTree(B3DList):
         for node in nodes:
             node.nodes = []
 
-        for i, node in enumerate(nodes):
+        for _, node in enumerate(nodes):
             if node.parent == -1:
                 tree.append(node)
             else:
