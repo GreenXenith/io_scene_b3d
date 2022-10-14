@@ -1016,7 +1016,7 @@ def write_node_mesh(obj,obj_count,arm_action,exp_root):
     return mesh_buf
 
 def build_vertex_groups(data):
-    for _ in getFaces(data):
+    for f in getFaces(data):
         for _ in f.vertices:
             vertex_groups.append({})
 
