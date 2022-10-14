@@ -107,7 +107,7 @@ def write_float_triplet(value1, value2, value3):
 
 def write_float_quad(value1, value2, value3, value4):
     return struct.pack("<ffff", value1, value2, value3, value4)
-    
+
 def write_string(value):
     binary_format = "<%ds"%(len(value)+1)
     return struct.pack(binary_format, str.encode(value))
@@ -395,7 +395,7 @@ def write_brus(objects=[]):
                 
                 face_stack = []
                 
-                for iuvlayer,uvlayer in enumerate(uv_textures):
+                for iuvlayer, _ in enumerate(uv_textures):
                     if iuvlayer < 8:
                         
                         img_id = -1
@@ -657,7 +657,7 @@ def write_node(objects=[]):
                 #print("Matrix : ", matrix)
                 position = matrix.to_translation()
 
-                temp_buf.append(write_float_triplet(position[0], position[2], position[1])) 
+                temp_buf.append(write_float_triplet(position[0], position[2], position[1]))
 
                 scale = scale_matrix.to_scale()
                 temp_buf.append(write_float_triplet(scale[0], scale[2], scale[1]))
@@ -1177,33 +1177,13 @@ def write_node_mesh_vrts(obj, data, obj_count, arm_action, exp_root):
             # uv_layers_count is from data.uv_layers
 
 
-            for iuvlayer in range(uv_layers_count):
+            for _ in range(uv_layers_count):
                 uv = my_uvs[face.index][vertex_id]
                 temp_buf.append(write_float_couple(uv[0], 1-uv[1]) )
 
 
             #e = time.time()
             #time_in_b2 += e - d
-
-            """
-            # ==== !!bottleneck here!! (40% of the function)
-            if vertex_id == 0:
-                for iuvlayer in range(uv_layers_count):
-                    uv = getUVTextures(data)[iuvlayer].data[face.index].uv1
-                    temp_buf.append(write_float_couple(uv[0], 1-uv[1]) ) # U, V
-            elif vertex_id == 1:
-                for iuvlayer in range(uv_layers_count):
-                    uv = getUVTextures(data)[iuvlayer].data[face.index].uv2
-                    temp_buf.append(write_float_couple(uv[0], 1-uv[1]) ) # U, V
-            elif vertex_id == 2:
-                for iuvlayer in range(uv_layers_count):
-                    uv = getUVTextures(data)[iuvlayer].data[face.index].uv3
-                    temp_buf.append(write_float_couple(uv[0], 1-uv[1]) ) # U, V
-            elif vertex_id == 3:
-                for iuvlayer in range(uv_layers_count):
-                    uv = getUVTextures(data)[iuvlayer].data[face.index].uv4
-                    temp_buf.append(write_float_couple(uv[0], 1-uv[1]) ) # U, V
-            """
 
             #f = time.time()
             #time_in_b3 += f - e
@@ -1278,8 +1258,8 @@ def write_node_mesh_tris(obj, data, obj_count,arm_action,exp_root):
             brus_id = -1
             if data.materials and data.materials[face.material_index]:
                 mat_name = data.materials[face.material_index].name
-                for i in range(len(brus_stack)):
-                    if brus_stack[i] == mat_name:
+                for i, brus in enumerate(brus_stack):
+                    if brus == mat_name:
                         brus_id = i
                         break
             else:
@@ -1442,9 +1422,9 @@ def write_node_keys(ibone):
 
     my_name = bone_stack[ibone][BONE_ITSELF].name
 
-    for ikeys in range(len(keys_stack)):
-        if keys_stack[ikeys][1] == my_name:
-            temp_buf.append(write_int(keys_stack[ikeys][0])) #Frame
+    for ikeys, key in enumerate(keys_stack):
+        if key[1] == my_name:
+            temp_buf.append(write_int(key[0])) #Frame
 
             position = keys_stack[ikeys][2]
             # FIXME: we should use the same matrix format everywhere and not require this
