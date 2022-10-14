@@ -47,14 +47,16 @@ bl_info = {
     "tracker_url": "https://sourceforge.net/apps/trac/supertuxkart/",
     "category": "Import-Export"}
 
+import math
+import mathutils
+import os
+import string
+import struct
+import sys
 
 import bpy
-import sys,os,os.path,struct,math,string
-import mathutils
-import math
 
 if not hasattr(sys,"argv"): sys.argv = ["???"]
-
 
 #Global Stacks
 b3d_parameters = {}
