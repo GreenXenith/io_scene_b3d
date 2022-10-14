@@ -1016,8 +1016,8 @@ def write_node_mesh(obj,obj_count,arm_action,exp_root):
     return mesh_buf
 
 def build_vertex_groups(data):
-    for f in getFaces(data):
-        for v in f.vertices:
+    for _ in getFaces(data):
+        for _ in f.vertices:
             vertex_groups.append({})
 
 
@@ -1087,7 +1087,7 @@ def write_node_mesh_vrts(obj, data, obj_count, arm_action, exp_root):
         for i in f.loop_indices:
             l = me.loops[i]
             v = me.vertices[l.vertex_index]
-            for j,ul in enumerate(me.uv_layers):
+            for _, ul in enumerate(me.uv_layers):
                 uv = ul.data[l.index].uv
                 my_uvs[f.index].append(uv)
 
@@ -1420,11 +1420,9 @@ def write_node_bone(ibone):
 
     my_name = bone_stack[ibone][BONE_ITSELF].name
 
-    for ivert in range(len(vertex_groups)):
-        if my_name in vertex_groups[ivert]:
-            vert_influ = vertex_groups[ivert][my_name]
-            #if DEBUG: print("        <bone name=",bone_stack[ibone][BONE_ITSELF].name,"face_vertex_id=", ivert + iuv,
-            #                " weigth=", vert_influ[1] , "/>")
+    for ivert, vert_group in enumerate(vertex_groups):
+        if my_name in vert_group:
+            vert_influ = vert_group[my_name]
             temp_buf.append(write_int(ivert)) # Face Vertex ID
             temp_buf.append(write_float(vert_influ)) #Weight
 
