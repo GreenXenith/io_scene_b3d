@@ -162,15 +162,6 @@ class DebugMacro(bpy.types.Operator):
         import_b3d.load(self, context, filepath=self.filepath)
         export_b3d.save(self, context, filepath=self.filepath.replace('.b3d','.exported.b3d'))
 
-        """
-        bpy.ops.view3d.viewnumpad(type='FRONT', align_active=False)
-
-        bpy.ops.view3d.view_all(use_all_regions=True, center=True)
-
-        if bpy.context.region_data.is_perspective:
-            bpy.ops.view3d.view_persportho()
-        """
-
         return {'FINISHED'}
 
 addon_keymaps = []
