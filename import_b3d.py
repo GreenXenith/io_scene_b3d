@@ -232,4 +232,4 @@ filepath = 'C:/Games/GnomE/media/models/ded/ded.b3d'
 if __name__ == "__main__":
     p = B3DDebugParser()
     p.parse(filepath)
-    
+
