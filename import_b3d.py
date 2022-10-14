@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 # by Joric, https://github.com/joric/io_scene_b3d
 
+import os
+
 import bpy
 from bpy_extras.image_utils import load_image
-from bpy_extras.io_utils import unpack_list, unpack_face_list
-import bmesh
 
-from .B3dParser import *
+from .B3dParser import B3DDebugParser, B3DTree
 
+ctx = None
 
 def flip(v):
     return ((v[0],v[2],v[1]) if len(v)<4 else (v[0], v[1],v[3],v[2]))
@@ -44,7 +45,7 @@ def import_mesh(node, parent):
     bpymesh.uv_layers.new().data.foreach_set('uv', uvlist)
 
     # adding object materials (insert-ordered)
-    for key, value in material_mapping.items():
+    for _, value in material_mapping.items():
         ob.data.materials.append(bpy.data.materials[value])
 
     # assign material_indexes
