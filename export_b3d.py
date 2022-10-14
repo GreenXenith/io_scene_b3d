@@ -47,10 +47,8 @@ bl_info = {
     "tracker_url": "https://sourceforge.net/apps/trac/supertuxkart/",
     "category": "Import-Export"}
 
-import math
 import mathutils
 import os
-import string
 import struct
 import sys
 
