@@ -128,17 +128,17 @@ class ExportB3D(bpy.types.Operator, ExportHelper):
     )
 
 
-    directions = [
-        ("+X", "+x", "", 1),
-        ("-X", "-x", "", 2),
-        ("+Y", "+y", "", 3),
-        ("-Y", "-y", "", 4),
-    ]
-    forward: EnumProperty(
-        name="Forward",
-        description="Choose which direction is forward",
-        default=False,
-    )
+    #directions = [
+    #    ("+X", "+x", "", 1),
+    #    ("-X", "-x", "", 2),
+    #    ("+Y", "+y", "", 3),
+    #    ("-Y", "-y", "", 4),
+    #]
+    #forward: EnumProperty(
+    #    name="Forward",
+    #    description="Choose which direction is forward",
+    #    default=False,
+    #)
 
     export_ambient: BoolProperty(
         name="Export Ambient Light",
