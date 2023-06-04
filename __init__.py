@@ -127,19 +127,6 @@ class ExportB3D(bpy.types.Operator, ExportHelper):
         default=False,
     )
 
-
-    #directions = [
-    #    ("+X", "+x", "", 1),
-    #    ("-X", "-x", "", 2),
-    #    ("+Y", "+y", "", 3),
-    #    ("-Y", "-y", "", 4),
-    #]
-    #forward: EnumProperty(
-    #    name="Forward",
-    #    description="Choose which direction is forward",
-    #    default=False,
-    #)
-
     export_ambient: BoolProperty(
         name="Export Ambient Light",
         description="Export world light color",
@@ -150,6 +137,17 @@ class ExportB3D(bpy.types.Operator, ExportHelper):
         name="Enable Mipmaps",
         description="Enables the mipmap flag on UV maps",
         default=False,
+    )
+
+    forward: EnumProperty(
+        items = [
+            ("+x", "+X", ""),
+            ("-x", "-X", ""),
+            ("+y", "+Y", ""),
+            ("-y", "-Y", ""),
+        ],
+        name="Forward",
+        description="Choose which direction is forward",
     )
 
     use_selection: BoolProperty(
@@ -229,6 +227,7 @@ class ExportB3D(bpy.types.Operator, ExportHelper):
         export_settings["use_local_transform"] = self.use_local_transform
         export_settings["export_ambient"] = self.export_ambient
         export_settings["enable_mipmaps"] = self.enable_mipmaps
+        export_settings["forward"] = self.forward
 
         export_settings["use_selection"] = self.use_selection
         export_settings["use_visible"] = self.use_visible
@@ -317,6 +316,7 @@ class B3D_PT_export_other(bpy.types.Panel):
         layout.prop(operator, "use_local_transform")
         layout.prop(operator, "export_ambient")
         layout.prop(operator, "enable_mipmaps")
+        layout.prop(operator, "forward")
 
 # Add to a menu
 def menu_func_export(self, context):

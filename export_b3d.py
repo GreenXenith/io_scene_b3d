@@ -928,8 +928,16 @@ def write_node_mesh_vrts(settings, obj, data, arm_action):
             vert_matrix @= TRANS_MATRIX
             vcoord = vert_matrix.to_translation()
 
-            temp_buf.append(write_float_triplet(vcoord.x, vcoord.z, vcoord.y))
-
+            forward_setting = settings.get("forward")
+            if forward_setting == "+y":
+                temp_buf.append(write_float_triplet(vcoord.x, vcoord.z, vcoord.y))
+            elif forward_setting == "-y":
+                temp_buf.append(write_float_triplet(-vcoord.x, vcoord.z, vcoord.y))
+            elif forward_setting == "-x":
+                temp_buf.append(write_float_triplet(vcoord.y, vcoord.z, -vcoord.x))
+            else:
+                temp_buf.append(write_float_triplet(vcoord.y, vcoord.z, vcoord.x))
+            
             if settings.get("export_normals"):
                 norm_matrix = mathutils.Matrix.Translation(loop.normal)
 
@@ -1125,10 +1133,26 @@ def write_node_node(settings, ibone):
 
     # FIXME: we should use the same matrix format everywhere to not require this
     position = matrix.to_translation()
+    forward_setting = settings.get("forward")
+    print(forward_setting)
     if bone[BONE_PARENT]:
-        temp_buf.append(write_float_triplet(-position[0], position[2], position[1]))
+        if forward_setting == "+y":
+            temp_buf.append(write_float_triplet(-position[0], position[2], position[1]))
+        elif forward_setting == "-y":
+            temp_buf.append(write_float_triplet(position[0], position[2], position[1]))
+        elif forward_setting == "-x":
+            temp_buf.append(write_float_triplet(-position[1], position[2], -position[0]))
+        else:
+            temp_buf.append(write_float_triplet(-position[1], position[2], position[0]))
     else:
-        temp_buf.append(write_float_triplet(position[0], position[2], position[1]))
+        if forward_setting == "+y":
+            temp_buf.append(write_float_triplet(position[0], position[2], position[1]))
+        elif forward_setting == "-y":
+            temp_buf.append(write_float_triplet(-position[0], position[2], position[1]))
+        elif forward_setting == "-x":
+            temp_buf.append(write_float_triplet(position[1], position[2], -position[0]))
+        else:
+            temp_buf.append(write_float_triplet(position[1], position[2], position[0]))
 
 
     scale = matrix.to_scale()
@@ -1185,14 +1209,36 @@ def write_node_keys(settings, ibone):
             temp_buf.append(write_int(keys_stack[ikeys][0])) #Frame
 
             position = keys_stack[ikeys][2]
+            forward_setting = settings.get("forward")
             # FIXME: we should use the same matrix format everywhere and not require this
             if settings.get("use_local_transform"):
                 if bone_stack[ibone][BONE_PARENT]:
-                    temp_buf.append(write_float_triplet(-position[0], position[2], position[1]))
+                    if forward_setting == "+y":
+                        temp_buf.append(write_float_triplet(-position[0], position[2], position[1]))
+                    elif forward_setting == "-y":
+                        temp_buf.append(write_float_triplet(position[0], position[2], position[1]))
+                    elif forward_setting == "-x":
+                        temp_buf.append(write_float_triplet(-position[1], position[2], -position[0]))
+                    else:
+                        temp_buf.append(write_float_triplet(-position[1], position[2], position[0]))
                 else:
-                    temp_buf.append(write_float_triplet(position[0], position[2], position[1]))
+                    if forward_setting == "+y":
+                        temp_buf.append(write_float_triplet(position[0], position[2], position[1]))
+                    elif forward_setting == "-y":
+                        temp_buf.append(write_float_triplet(-position[0], position[2], position[1]))
+                    elif forward_setting == "-x":
+                        temp_buf.append(write_float_triplet(position[1], position[2], -position[0]))
+                    else:
+                        temp_buf.append(write_float_triplet(position[1], position[2], position[0]))
             else:
-                temp_buf.append(write_float_triplet(-position[0], position[1], position[2]))
+                if forward_setting == "+y":
+                    temp_buf.append(write_float_triplet(-position[0], position[1], position[2]))
+                elif forward_setting == "-y":
+                    temp_buf.append(write_float_triplet(position[0], position[1], position[2]))
+                elif forward_setting == "-x":
+                    temp_buf.append(write_float_triplet(position[2], position[1], -position[0]))
+                else:
+                    temp_buf.append(write_float_triplet(position[2], position[1], position[0]))
 
             scale = keys_stack[ikeys][3]
             temp_buf.append(write_float_triplet(scale[0], scale[1], scale[2]))
@@ -1200,7 +1246,14 @@ def write_node_keys(settings, ibone):
             quat = keys_stack[ikeys][4]
             quat.normalize()
 
-            temp_buf.append(write_float_quad(quat.w, -quat.x, quat.y, quat.z))
+            if forward_setting == "+y":
+                temp_buf.append(write_float_quad(quat.w, -quat.x, quat.y, quat.z))
+            elif forward_setting == "-y":
+                temp_buf.append(write_float_quad(quat.w, quat.x, quat.y, quat.z))
+            elif forward_setting == "-x":
+                temp_buf.append(write_float_quad(quat.w, quat.z, quat.y, quat.x))
+            else:
+                temp_buf.append(write_float_quad(quat.w, quat.z, quat.y, -quat.x))
 
     keys_buf += write_chunk(b"KEYS",b"".join(temp_buf))
     temp_buf = []
