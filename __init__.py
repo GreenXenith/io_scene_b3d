@@ -51,7 +51,6 @@ from bpy_extras.io_utils import (
         )
 
 
-
 @orientation_helper(axis_forward="Y", axis_up="Z")
 class ImportB3D(bpy.types.Operator, ImportHelper):
     """Import from B3D file format (.b3d)"""
