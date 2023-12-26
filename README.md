@@ -1,7 +1,7 @@
 # io_scene_b3d
 
-Blender Import-Export script for Blitz 3D .b3d files.  
-Should work with versions 2.8x, 2.9x, and 3.x.  
+Blender Import-Export script for Blitz 3D .b3d files.\
+Should work with versions 2.8x, 2.9x, 3.x, and 4.x.
 
 ## Installation
 Download the ZIP file:
